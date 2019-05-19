@@ -547,3 +547,106 @@ private static final String[] PROJECTION = new String[] {
 
 
 ### 根据时间排序
+1.在 list_options_menu.xml 中添加排序项目  
+```
+<item android:id="@+id/menu_sort"
+        android:title="时间排序"/>
+```
+2、在NotesList中switch下添加排序方法的case  
+```
+ //修改时间排序
+            case R.id.menu_sort2:
+                cursor = managedQuery(
+                        getIntent().getData(),            // Use the default content URI for the provider.
+                        PROJECTION,                       // Return the note ID and title for each note. and modifcation date
+                        null,                             // No where clause, return all records.
+                        null,                             // No where clause, therefore no where column values.
+                        NotePad.Notes.DEFAULT_SORT_ORDER // Use the default sort order.
+                );
+
+                adapter = new MyCursorAdapter(
+                        this,
+                        R.layout.noteslist_item,
+                        cursor,
+                        dataColumns,
+                        viewIDs
+                );
+                setListAdapter(adapter);
+                return true;
+```
+设置完毕，排序功能完成  
+排序截图：  
+
+
+### 批量删除笔记
+1、在 list_options_menu.xml 中添加项目  
+```
+<item
+        android:id="@+id/menu_de"
+        android:title="批量删除"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:showAsAction="always" >
+        <menu>
+            <item
+                android:id="@+id/more_de"
+                android:title="批量处理"/>
+            <item
+                android:id="@+id/quite_de"
+                android:title="确定删除"/>
+
+        </menu>
+    </item>
+```
+2、在NoteList的Oncreate()中设置添加  
+```
+CheckBox cb;
+        {
+            for(int i=0;i<n;i++)
+            {
+                strList.add(NotePad.Notes.COLUMN_NAME_TITLE);
+                boolList.add(false);
+            }
+        }
+```
+3、在NoteList的onOptionsItemSelected中添加
+```
+case R.id.menu_de:  //批量删除
+            case R.id.more_de: //多项选择
+            {
+                if(visflag)
+                {
+                    visflag = false;
+                    for(int i=0; i<boolList.size();i++)
+                    {
+                        boolList.set(i, false);
+                    }
+                }
+                else
+                {
+                    visflag = true;
+                }
+                this.ladapter.notifyDataSetInvalidated();
+                break;
+            }
+            case R.id.quite_de:  //确定删除
+                if(boolList.size()>0)
+                {
+                    if(visflag)
+                    {
+                        for(int location=0; location<boolList.size(); )
+                        {
+                            if(boolList.get(location))
+                            {
+                                boolList.remove(location);
+                                strList.remove(location);
+                                continue;
+                            }
+                            location++;
+                        }
+                    }
+                }
+                this.ladapter.notifyDataSetChanged();
+                break;
+                 return true;
+```
+设置完毕，还未修改，没有结果  
