@@ -233,3 +233,157 @@ public class NoteSearch extends ListActivity implements SearchView.OnQueryTextLi
 搜索显示截图：  
 
 
+### 设置背景图片  
+1、在editor_option_menu.xml中设置关于设置背景图片的项目  
+```
+<item android:id="@+id/image_ground"
+        android:title="设置背景图片" />
+```
+2、在NoteEditor.java中的onOptionsItemSelected()方法的switch语句中添加  
+```
+case R.id.image_ground:
+                gallery();
+                break;
+```
+3、在NoteEditor中添加全局变量  
+```
+    private static final int REQUEST_CODE_GALLERY = 0x10;// 图库选取图片标识请求码
+    private static final int CROP_PHOTO = 0x12;// 裁剪图片标识请求码
+    private static final int STORAGE_PERMISSION = 0x20;// 动态申请存储权限标识
+    private File imageFile = null;// 声明File对象
+    private Uri imageUri = null;// 裁剪后的图片uri
+```
+4、获取图片url  
+在NoteEditor中添加代码
+```
+ /**
+     * 图库选择图片
+     */
+    private void gallery() {
+
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        // 以startActivityForResult的方式启动一个activity用来获取返回的结果
+        startActivityForResult(intent, REQUEST_CODE_GALLERY);
+    }
+
+    /**
+     * 接收#startActivityForResult(Intent, int)调用的结果
+     * @param requestCode 请求码 识别这个结果来自谁
+     * @param resultCode    结果码
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK){// 操作成功了
+
+            switch (requestCode){
+
+                case REQUEST_CODE_GALLERY:// 图库选择图片
+
+                    Uri uri = data.getData();// 获取图片的uri
+
+                    Intent intent_gallery_crop = new Intent("com.android.camera.action.CROP");
+                    intent_gallery_crop.setDataAndType(uri, "image/*");
+
+                    // 设置裁剪
+                    intent_gallery_crop.putExtra("crop", "true");
+                    intent_gallery_crop.putExtra("scale", true);
+                    // aspectX aspectY 是宽高的比例
+                    intent_gallery_crop.putExtra("aspectX", 1);
+                    intent_gallery_crop.putExtra("aspectY", 1);
+                    // outputX outputY 是裁剪图片宽高
+                    intent_gallery_crop.putExtra("outputX", 400);
+                    intent_gallery_crop.putExtra("outputY", 400);
+
+                    intent_gallery_crop.putExtra("return-data", false);
+
+                    // 创建文件保存裁剪的图片
+                    createImageFile();
+                    imageUri = Uri.fromFile(imageFile);
+
+                    if (imageUri != null){
+                        intent_gallery_crop.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                        intent_gallery_crop.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+                    }
+
+                    startActivityForResult(intent_gallery_crop, CROP_PHOTO);
+
+                    break;
+
+                case CROP_PHOTO:// 裁剪图片
+
+                    try{
+
+                        if (imageUri != null){
+                            displayImage(imageUri);
+                        }
+
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+                    break;
+
+            }
+
+        }
+    }
+
+    /**
+     * 创建File保存图片
+     */
+    private void createImageFile() {
+
+        try{
+
+            if (imageFile != null && imageFile.exists()){
+                imageFile.delete();
+            }
+            // 新建文件
+            imageFile = new File(Environment.getExternalStorageDirectory(),
+                    System.currentTimeMillis() + "galleryDemo.jpg");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+```
+5、显示图片  
+先在gadle(app)中将minsdk设置为16  
+在NoteEditor中添加代码：  
+```
+private void displayImage(Uri imageUri) {
+        Drawable drawable= Drawable.createFromPath(imageUri.toString());
+        getWindow().getDecorView().setBackground(drawable);  
+    }
+
+```
+6、在NoteEditor的updateNote()方法中添加代码，记录url  
+```
+values.put(NotePad.Notes.COLUMN_NAME_BACK_IMAGE, imageUri.toString());
+```
+7、在NotePad中添加  
+```
+public static final String COLUMN_NAME_BACK_IMAGE= "back_image";
+```
+8、在NotePadProvider中的sql表格添加一行+ NotePad.Notes.COLUMN_NAME_BACK_IMAGE + " TEXT"  
+```
+@Override
+       public void onCreate(SQLiteDatabase db) {
+           db.execSQL("CREATE TABLE " + NotePad.Notes.TABLE_NAME + " ("
+                   + NotePad.Notes._ID + " INTEGER PRIMARY KEY,"
+                   + NotePad.Notes.COLUMN_NAME_TITLE + " TEXT,"
+                   + NotePad.Notes.COLUMN_NAME_NOTE + " TEXT,"
+                   + NotePad.Notes.COLUMN_NAME_CREATE_DATE + " INTEGER,"
+                   + NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE + " INTEGER,"
+                   + NotePad.Notes.COLUMN_NAME_BACK_IMAGE + " TEXT"
+                   + ");");
+       }
+```
+9、在NotePadProvider中的insert()添加  
+```
+if (values.containsKey(NotePad.Notes.COLUMN_NAME_BACK_IMAGE) == false) {
+            values.put(NotePad.Notes.COLUMN_NAME_BACK_IMAGE, "");
+        }
+```
