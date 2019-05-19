@@ -115,6 +115,7 @@ Long now = Long.valueOf(System.currentTimeMillis());
 </LinearLayout>
 ```
 3、新建一个activity名为NoteSearch，继承ListActivity类SearchView.OnQueryTextListener接口  
+
 ```
 package com.example.android.notepad;
 
