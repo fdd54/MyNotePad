@@ -79,7 +79,7 @@ Long now = Long.valueOf(System.currentTimeMillis());
 ```
 设置完毕，完成时间的显示  
 时间显示截图：  
-
+![images][https://github.com/fdd54/MyNotePad/blob/master/images/超级截屏_20190519_170617.png]
   
 ### 根据标题搜索笔记
 1、在list_options_menu.xml中添加搜索项:  
