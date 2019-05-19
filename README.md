@@ -20,7 +20,7 @@ A simple Notepad provides basic functionality
   
 ### 修改笔记的时间的显示 
 1、修改notelist_item，添加一个LinearLayout和TextView
-、、、
+```
 <LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layout"
     android:layout_width="match_parent"
@@ -43,4 +43,4 @@ A simple Notepad provides basic functionality
         android:paddingLeft="5dip"
         android:textColor="@color/black"/>
 </LinearLayout>
-、、、
+```
