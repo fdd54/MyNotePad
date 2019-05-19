@@ -227,6 +227,7 @@ public class NoteSearch extends ListActivity implements SearchView.OnQueryTextLi
 ```
 设置完毕，搜索功能完成  
 搜索显示截图：  
+![image](https://github.com/fdd54/MyNotePad/blob/master/images/超级截屏_20190519_171159.png)  
 
 
 ### 设置背景图片  
@@ -395,7 +396,9 @@ if (values.containsKey(NotePad.Notes.COLUMN_NAME_BACK_IMAGE) == false) {
 ```
 设置完毕，设置背景图片功能完成  
 设置图片背景截图（显示图片方法不同，背景可能会为黑色） 
-
+![image](https://github.com/fdd54/MyNotePad/blob/master/images/超级截屏_20190519_163800.png)  
+![image](https://github.com/fdd54/MyNotePad/blob/master/images/超级截屏_20190519_163833.png)  
+![image](https://github.com/fdd54/MyNotePad/blob/master/images/超级截屏_20190519_163850.png)  
 
 
 ### 设置背景颜色
@@ -544,6 +547,7 @@ private static final String[] PROJECTION = new String[] {
 ```
 设置完成，设置背景颜色功能完成  
 设置背景颜色截图：  
+![image](https://github.com/fdd54/MyNotePad/blob/master/images/超级截屏_20190519_163735.png)  
 
 
 ### 根据时间排序
@@ -576,6 +580,7 @@ private static final String[] PROJECTION = new String[] {
 ```
 设置完毕，排序功能完成  
 排序截图：  
+![image](https://github.com/fdd54/MyNotePad/blob/master/images/超级截屏_20190519_170617.png)  
 
 
 ### 批量删除笔记
