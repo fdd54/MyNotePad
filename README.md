@@ -90,7 +90,7 @@ Long now = Long.valueOf(System.currentTimeMillis());
         android:icon="@android:drawable/ic_search_category_default"
         android:showAsAction="always">
     </item>
-    ```
+```
 2、新建一个用于显示搜索页面的LinearLayout布局文件note_search_list.xml： 
 ```
 <?xml version="1.0" encoding="utf-8"?>
