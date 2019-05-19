@@ -115,7 +115,6 @@ Long now = Long.valueOf(System.currentTimeMillis());
 </LinearLayout>
 ```
 3、新建一个activity名为NoteSearch，继承ListActivity类SearchView.OnQueryTextListener接口  
-
 ```
 package com.example.android.notepad;
 
@@ -211,7 +210,6 @@ public class NoteSearch extends ListActivity implements SearchView.OnQueryTextLi
     }
 
 }
-
 ```
 4、修改NotesList.java的onOptionsItemSelected()方法，在switch中插入关于搜索的case语句  
 ```
@@ -359,15 +357,25 @@ private void displayImage(Uri imageUri) {
     }
 
 ```
-6、在NoteEditor的updateNote()方法中添加代码，记录url  
+6、在NoteEditor的PROJECTION中添加一行NotePad.Notes.COLUMN_NAME_BACK_IMAGE  
+```
+private static final String[] PROJECTION =
+        new String[] {
+            NotePad.Notes._ID,
+            NotePad.Notes.COLUMN_NAME_TITLE,
+            NotePad.Notes.COLUMN_NAME_NOTE,
+            NotePad.Notes.COLUMN_NAME_BACK_IMAGE
+    };
+```
+7、在NoteEditor的updateNote()方法中添加代码，记录url  
 ```
 values.put(NotePad.Notes.COLUMN_NAME_BACK_IMAGE, imageUri.toString());
 ```
-7、在NotePad中添加  
+8、在NotePad中添加  
 ```
 public static final String COLUMN_NAME_BACK_IMAGE= "back_image";
 ```
-8、在NotePadProvider中的sql表格添加一行+ NotePad.Notes.COLUMN_NAME_BACK_IMAGE + " TEXT"  
+9、在NotePadProvider中的sql表格添加一行+ NotePad.Notes.COLUMN_NAME_BACK_IMAGE + " TEXT"   
 ```
 @Override
        public void onCreate(SQLiteDatabase db) {
@@ -381,9 +389,163 @@ public static final String COLUMN_NAME_BACK_IMAGE= "back_image";
                    + ");");
        }
 ```
-9、在NotePadProvider中的insert()添加  
+10、在NotePadProvider中的insert()添加  
 ```
 if (values.containsKey(NotePad.Notes.COLUMN_NAME_BACK_IMAGE) == false) {
             values.put(NotePad.Notes.COLUMN_NAME_BACK_IMAGE, "");
         }
 ```
+设置完毕，设置背景图片功能完成  
+设置图片背景截图（显示图片方法不同，背景可能会为黑色） 
+
+
+
+### 设置背景颜色
+1、在NotePad中添加：
+```
+public static final String COLUMN_NAME_BACK_COLOR = "color";
+        public static final int DEFAULT_COLOR = 0; //颜色对应的数值
+        public static final int YELLOW_COLOR = 1;
+        public static final int BLUE_COLOR = 2;
+        public static final int RED_COLOR = 4;
+        public static final int BLACK_COLOR=5;
+```
+2、在editor_options_menu.xml中添加项目及子项目
+```
+<item android:title="设置背景颜色"
+        android:id="@+id/back_color">
+        <menu>
+            <item android:id="@+id/black"
+                android:title="Black" />
+            <item android:id="@+id/red"
+                android:title="Pink" />
+            <item android:id="@+id/yellow"
+                android:title="Yellow" />
+            <item android:id="@+id/blue"
+                android:title="Blue"/>
+        </menu>
+    </item>
+```
+3、在NoteEditor中设置全局变量backcolor默认值为0
+```
+  private int backcolor=NotePad.Notes.DEFAULT_COLOR;
+```
+4、在NoteEditor中的onOptionsItemSelected()添加：
+```
+case R.id.back_color:
+            case R.id.red:
+                changeColor(NotePad.Notes.YELLOW_COLOR);
+                break;
+            case R.id.black:
+                changeColor(NotePad.Notes.BLUE_COLOR);
+                break;
+            case R.id.blue:
+                changeColor(NotePad.Notes.BLACK_COLOR);
+                break;
+            case R.id.yellow:
+                changeColor(NotePad.Notes.DEFAULT_COLOR);
+                break;
+```
+5、在NoteEdittor中写入代码响应选项：
+```
+private final void changeColor(int color) {
+        switch(color) {
+            case NotePad.Notes.YELLOW_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.yellow));
+                backcolor=NotePad.Notes.YELLOW_COLOR;
+                break;
+            case NotePad.Notes.BLUE_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.blue));
+                backcolor=NotePad.Notes.BLUE_COLOR;
+                break;
+            case NotePad.Notes.RED_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.red));
+                backcolor=NotePad.Notes.RED_COLOR;
+                break;
+            case NotePad.Notes.BLACK_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.black));
+                backcolor=NotePad.Notes.BLACK_COLOR;
+                break;
+            default:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.white));
+                backcolor=NotePad.Notes.DEFAULT_COLOR;
+                break;
+        }
+    }
+```
+6、在NoteEditor的PROJECTION中添加一行NotePad.Notes.COLUMN_NAME_BACK_COLOR
+```
+private static final String[] PROJECTION =
+        new String[] {
+            NotePad.Notes._ID,
+            NotePad.Notes.COLUMN_NAME_TITLE,
+            NotePad.Notes.COLUMN_NAME_NOTE,
+            NotePad.Notes.COLUMN_NAME_BACK_IMAGE,
+            NotePad.Notes.COLUMN_NAME_BACK_COLOR
+    };
+```
+7、在NoteEditor的updateNote()方法中添加代码，记录颜色编码  
+```
+values.put(NotePad.Notes.COLUMN_NAME_BACK_COLOR, backcolor);
+```
+8、在NoteEditor的OnReSume()方法中添加代码,初始化背景颜色  
+```
+int color = mCursor.getInt(mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_BACK_COLOR));
+                switch(color) {
+                    case NotePad.Notes.YELLOW_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.yellow));
+                        backcolor=NotePad.Notes.YELLOW_COLOR;
+                        break;
+                    case NotePad.Notes.BLUE_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.blue));
+                        backcolor=NotePad.Notes.BLUE_COLOR;
+                        break;
+                    case NotePad.Notes.RED_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.red));
+                        backcolor=NotePad.Notes.RED_COLOR;
+                        break;
+                    case NotePad.Notes.BLACK_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.black));
+                        backcolor=NotePad.Notes.BLACK_COLOR;
+                        break;
+                    default:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.white));
+                        backcolor=NotePad.Notes.DEFAULT_COLOR;
+                        break;
+                }
+                ```
+9、在NotePadProvider中的sql表格添加一行+ NotePad.Notes.COLUMN_NAME_BACK_IMAGE + " TEXT"   
+```
+@Override
+       public void onCreate(SQLiteDatabase db) {
+           db.execSQL("CREATE TABLE " + NotePad.Notes.TABLE_NAME + " ("
+                   + NotePad.Notes._ID + " INTEGER PRIMARY KEY,"
+                   + NotePad.Notes.COLUMN_NAME_TITLE + " TEXT,"
+                   + NotePad.Notes.COLUMN_NAME_NOTE + " TEXT,"
+                   + NotePad.Notes.COLUMN_NAME_CREATE_DATE + " INTEGER,"
+                   + NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE + " INTEGER,"
+                   + NotePad.Notes.COLUMN_NAME_BACK_IMAGE + " TEXT"
+                   + ");");
+       }
+```
+10、在NotePadProvider中的insert()添加  
+```
+if (values.containsKey(NotePad.Notes.COLUMN_NAME_BACK_COLOR) == false) {
+            values.put(NotePad.Notes.COLUMN_NAME_BACK_COLOR, NotePad.Notes.DEFAULT_COLOR);
+        }
+```
+11、修改NoteList  
+```
+private static final String[] PROJECTION = new String[] {
+           NotePad.Notes._ID, // 0
+           NotePad.Notes.COLUMN_NAME_TITLE, // 1
+           //扩展 显示时间 颜色
+           NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, // 2
+           NotePad.Notes.COLUMN_NAME_BACK_COLOR,
+   };
+```
+设置完成，设置背景颜色功能完成  
+设置背景颜色截图：  
+
+
+### 根据时间排序
