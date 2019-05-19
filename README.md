@@ -60,12 +60,15 @@ String[] dataColumns = { NotePad.Notes.COLUMN_NAME_TITLE,NotePad.Notes.COLUMN_NA
     // noteslist_item.xml
     int[] viewIDs = { android.R.id.text1 ,R.id.text1_time};
 ```
+4、获取当前时间并格式化存入数据库: 
+在NotePadProvider.java中的insert()方法修改插入部分代码，存储的是创建时间暨第一次修改时间
 ```
 Long now = Long.valueOf(System.currentTimeMillis());
         Date date = new Date(now);
         SimpleDateFormat format = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
         String dateTime = format.format(date);
 ```
+在NoteEditor.java中的updateNote()方法修改插入部分代码，存储的是创建时间暨第一次修改时间
 ```
 //修改时间
         Long now = Long.valueOf(System.currentTimeMillis());
