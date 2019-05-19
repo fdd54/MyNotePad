@@ -16,6 +16,7 @@
 
 package com.example.android.notepad;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -24,13 +25,22 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
@@ -38,6 +48,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 /**
  * This Activity handles "editing" a note, where editing is responding to
  * {@link Intent#ACTION_VIEW} (request to view data), edit a note
@@ -53,6 +66,13 @@ public class NoteEditor extends Activity {
     // For logging and debugging purposes
     private static final String TAG = "NoteEditor";
 
+
+    private static final int REQUEST_CODE_GALLERY = 0x10;// 图库选取图片标识请求码
+    private static final int CROP_PHOTO = 0x12;// 裁剪图片标识请求码
+    private static final int STORAGE_PERMISSION = 0x20;// 动态申请存储权限标识
+    private File imageFile = null;// 声明File对象
+    private Uri imageUri = null;// 裁剪后的图片uri
+    private int backcolor=0;
     /*
      * Creates a projection that returns the note ID and the note contents.
      */
@@ -60,7 +80,9 @@ public class NoteEditor extends Activity {
         new String[] {
             NotePad.Notes._ID,
             NotePad.Notes.COLUMN_NAME_TITLE,
-            NotePad.Notes.COLUMN_NAME_NOTE
+            NotePad.Notes.COLUMN_NAME_NOTE,
+            NotePad.Notes.COLUMN_NAME_BACK_IMAGE,
+            NotePad.Notes.COLUMN_NAME_BACK_COLOR
     };
 
     // A label for the saved state of the activity
@@ -81,7 +103,7 @@ public class NoteEditor extends Activity {
     /**
      * Defines a custom EditText View that draws lines between each line of text that is displayed.
      */
-    public static class LinedEditText extends EditText {
+    public static class LinedEditText extends android.support.v7.widget.AppCompatEditText {
         private Rect mRect;
         private Paint mPaint;
 
@@ -273,6 +295,29 @@ public class NoteEditor extends Activity {
                 String text = String.format(res.getString(R.string.title_edit), title);
                 setTitle(text);
             // Sets the title to "create" for inserts
+                int color = mCursor.getInt(mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_BACK_COLOR));
+                switch(color) {
+                    case NotePad.Notes.YELLOW_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.yellow));
+                        backcolor=NotePad.Notes.YELLOW_COLOR;
+                        break;
+                    case NotePad.Notes.BLUE_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.blue));
+                        backcolor=NotePad.Notes.BLUE_COLOR;
+                        break;
+                    case NotePad.Notes.RED_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.red));
+                        backcolor=NotePad.Notes.RED_COLOR;
+                        break;
+                    case NotePad.Notes.BLACK_COLOR:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.black));
+                        backcolor=NotePad.Notes.BLACK_COLOR;
+                        break;
+                    default:
+                        getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.white));
+                        backcolor=NotePad.Notes.DEFAULT_COLOR;
+                        break;
+                }
             } else if (mState == STATE_INSERT) {
                 setTitle(getText(R.string.title_create));
             }
@@ -445,6 +490,22 @@ public class NoteEditor extends Activity {
         case R.id.menu_revert:
             cancelNote();
             break;
+            case R.id.image_ground:
+                gallery();
+                break;
+            case R.id.back_color:
+            case R.id.red:
+                changeColor(1);
+                break;
+            case R.id.black:
+                changeColor(2);
+                break;
+            case R.id.blue:
+                changeColor(3);
+                break;
+            case R.id.yellow:
+                changeColor(4);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -525,8 +586,14 @@ public class NoteEditor extends Activity {
 
         // Sets up a map to contain values to be updated in the provider.
         ContentValues values = new ContentValues();
-        values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, System.currentTimeMillis());
-
+        //修改时间
+        Long now = Long.valueOf(System.currentTimeMillis());
+        Date date = new Date(now);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+        String dateTime = format.format(date);
+        values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, dateTime);
+        values.put(NotePad.Notes.COLUMN_NAME_BACK_IMAGE, imageUri.toString());
+        values.put(NotePad.Notes.COLUMN_NAME_BACK_COLOR, backcolor);
         // If the action is to insert a new note, this creates an initial title for it.
         if (mState == STATE_INSERT) {
 
@@ -558,6 +625,7 @@ public class NoteEditor extends Activity {
 
         // This puts the desired notes text into the map.
         values.put(NotePad.Notes.COLUMN_NAME_NOTE, text);
+
 
         /*
          * Updates the provider with the new values in the map. The ListView is updated
@@ -613,4 +681,182 @@ public class NoteEditor extends Activity {
             mText.setText("");
         }
     }
+
+
+    private final void changeColor(int color) {
+        switch(color) {
+            case NotePad.Notes.YELLOW_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.yellow));
+                backcolor=NotePad.Notes.YELLOW_COLOR;
+                break;
+            case NotePad.Notes.BLUE_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.blue));
+                backcolor=NotePad.Notes.BLUE_COLOR;
+                break;
+            case NotePad.Notes.RED_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.red));
+                backcolor=NotePad.Notes.RED_COLOR;
+                break;
+            case NotePad.Notes.BLACK_COLOR:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.black));
+                backcolor=NotePad.Notes.BLACK_COLOR;
+                break;
+            default:
+                getWindow().getDecorView().setBackgroundColor(getResources().getColor(R.color.white));
+                backcolor=NotePad.Notes.DEFAULT_COLOR;
+                break;
+        }
+    }
+
+    /**
+     * 图库选择图片
+     */
+    private void gallery() {
+
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        // 以startActivityForResult的方式启动一个activity用来获取返回的结果
+        startActivityForResult(intent, REQUEST_CODE_GALLERY);
+    }
+
+    /**
+     * 接收#startActivityForResult(Intent, int)调用的结果
+     * @param requestCode 请求码 识别这个结果来自谁
+     * @param resultCode    结果码
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK){// 操作成功了
+
+            switch (requestCode){
+
+                case REQUEST_CODE_GALLERY:// 图库选择图片
+
+                    Uri uri = data.getData();// 获取图片的uri
+
+                    Intent intent_gallery_crop = new Intent("com.android.camera.action.CROP");
+                    intent_gallery_crop.setDataAndType(uri, "image/*");
+
+                    // 设置裁剪
+                    intent_gallery_crop.putExtra("crop", "true");
+                    intent_gallery_crop.putExtra("scale", true);
+                    // aspectX aspectY 是宽高的比例
+                    intent_gallery_crop.putExtra("aspectX", 1);
+                    intent_gallery_crop.putExtra("aspectY", 1);
+                    // outputX outputY 是裁剪图片宽高
+                    intent_gallery_crop.putExtra("outputX", 400);
+                    intent_gallery_crop.putExtra("outputY", 400);
+
+                    intent_gallery_crop.putExtra("return-data", false);
+
+                    // 创建文件保存裁剪的图片
+                    createImageFile();
+                    imageUri = Uri.fromFile(imageFile);
+
+                    if (imageUri != null){
+                        intent_gallery_crop.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                        intent_gallery_crop.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+                    }
+
+                    startActivityForResult(intent_gallery_crop, CROP_PHOTO);
+
+                    break;
+
+                case CROP_PHOTO:// 裁剪图片
+
+                    try{
+
+                        if (imageUri != null){
+                            displayImage(imageUri);
+                        }
+
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+                    break;
+
+            }
+
+        }
+    }
+
+    /**
+     * Android6.0后需要动态申请危险权限
+     * 动态申请存储权限
+     */
+    private void requestStoragePermission() {
+
+        int hasCameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        Log.e("TAG","开始" + hasCameraPermission);
+        if (hasCameraPermission == PackageManager.PERMISSION_GRANTED){
+            // 拥有权限，可以执行涉及到存储权限的操作
+            Log.e("TAG", "你已经授权了该组权限");
+        }else {
+            // 没有权限，向用户申请该权限
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Log.e("TAG", "向用户申请该组权限");
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION);
+            }
+        }
+
+    }
+
+    /**
+     * 动态申请权限的结果回调
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == STORAGE_PERMISSION){
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                // 用户同意，执行相应操作
+                Log.e("TAG","用户已经同意了存储权限");
+            }else {
+                // 用户不同意，向用户展示该权限作用
+            }
+        }
+
+    }
+
+    /**
+     * 创建File保存图片
+     */
+    private void createImageFile() {
+
+        try{
+
+            if (imageFile != null && imageFile.exists()){
+                imageFile.delete();
+            }
+            // 新建文件
+            imageFile = new File(Environment.getExternalStorageDirectory(),
+                    System.currentTimeMillis() + "galleryDemo.jpg");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 显示图片
+     * @param imageUri 图片的uri
+     */
+    private void displayImage(Uri imageUri) {
+        //File imageFile=new File(imageUri.toString());
+        // imageUri = ImageDownloader.Scheme.DRAWABLE.wrap("R.drawable.image");
+        Drawable drawable= Drawable.createFromPath(imageUri.toString());
+
+        BitmapDrawable bd = (BitmapDrawable) drawable;
+        // lo.setBackground(drawable);
+        //   lo.setBackgroundColor(getResources().getColor(R.color.red));
+        // lo.setBackground(bd);
+        getWindow().getDecorView().setBackground(drawable);
+    }
+
 }

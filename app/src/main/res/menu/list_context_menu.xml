@@ -6,4 +6,17 @@
           android:title="@string/menu_copy" />
     <item android:id="@+id/context_delete"
           android:title="@string/menu_delete" />
+    <item android:title="设置背景颜色"
+        android:id="@+id/back_color">
+        <menu>
+            <item android:id="@+id/black"
+                android:title="Black" />
+            <item android:id="@+id/red"
+                android:title="Pink" />
+            <item android:id="@+id/yellow"
+                android:title="Yellow" />
+            <item android:id="@+id/blue"
+                android:title="Blue"/>
+        </menu>
+    </item>
 </menu>

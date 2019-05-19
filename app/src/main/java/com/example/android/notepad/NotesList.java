@@ -38,6 +38,10 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Displays a list of notes. Will display notes from the {@link Uri}
@@ -54,12 +58,23 @@ public class NotesList extends ListActivity {
     // For logging and debugging
     private static final String TAG = "NotesList";
 
+    private List<String> strList = new ArrayList<String>();
+    private List<Boolean> boolList = new ArrayList<Boolean>();
+    boolean visflag = false;
+
+    // The names of the cursor columns to display in the view, initialized to the title column
+    String[] dataColumns = { NotePad.Notes.COLUMN_NAME_TITLE,NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE } ;
+
+    // The view IDs that will display the cursor columns, initialized to the TextView in
+    // noteslist_item.xml
+    int[] viewIDs = { android.R.id.text1 ,R.id.text1_time};
     /**
      * The columns needed by the cursor adapter
      */
     private static final String[] PROJECTION = new String[] {
             NotePad.Notes._ID, // 0
             NotePad.Notes.COLUMN_NAME_TITLE, // 1
+            NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, // 2
     };
 
     /** The index of the title column */
@@ -108,6 +123,14 @@ public class NotesList extends ListActivity {
             NotePad.Notes.DEFAULT_SORT_ORDER  // Use the default sort order.
         );
 
+       /* CheckBox cb;
+        {
+            for(int i=0;i<n;i++)
+            {
+                strList.add(NotePad.Notes.COLUMN_NAME_TITLE);
+                boolList.add(false);
+            }
+        }*/
         /*
          * The following two arrays create a "map" between columns in the cursor and view IDs
          * for items in the ListView. Each element in the dataColumns array represents
@@ -116,12 +139,7 @@ public class NotesList extends ListActivity {
          * value will appear in the ListView.
          */
 
-        // The names of the cursor columns to display in the view, initialized to the title column
-        String[] dataColumns = { NotePad.Notes.COLUMN_NAME_TITLE } ;
 
-        // The view IDs that will display the cursor columns, initialized to the TextView in
-        // noteslist_item.xml
-        int[] viewIDs = { android.R.id.text1 };
 
         // Creates the backing adapter for the ListView.
         SimpleCursorAdapter adapter
@@ -262,6 +280,8 @@ public class NotesList extends ListActivity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        TextView tv2=(TextView)findViewById(android.R.id.text1);
+        TextView tv1=(TextView)findViewById(R.id.text1_time);
         switch (item.getItemId()) {
         case R.id.menu_add:
           /*
@@ -279,7 +299,62 @@ public class NotesList extends ListActivity {
            */
           startActivity(new Intent(Intent.ACTION_PASTE, getIntent().getData()));
           return true;
-        default:
+            case R.id.menu_sort:
+                Cursor cursor = managedQuery(
+                        getIntent().getData(),            // Use the default content URI for the provider.
+                        PROJECTION,                       // Return the note ID and title for each note. and modifcation date
+                        null,                             // No where clause, return all records.
+                        null,                             // No where clause, therefore no where column values.
+                        NotePad.Notes._ID  // Use the default sort order.
+                );
+                SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                        this,
+                        R.layout.noteslist_item,
+                        cursor,
+                        dataColumns,
+                        viewIDs
+                );
+                setListAdapter(adapter);
+                return true;
+           /* case R.id.menu_de:  //批量删除
+            case R.id.more_de: //多项选择
+            {
+                if(visflag)
+                {
+                    visflag = false;
+                    for(int i=0; i<boolList.size();i++)
+                    {
+                        boolList.set(i, false);
+                    }
+                }
+                else
+                {
+                    visflag = true;
+                }
+                this.ladapter.notifyDataSetInvalidated();
+                break;
+            }
+            case R.id.quite_de:  //确定删除
+                if(boolList.size()>0)
+                {
+                    if(visflag)
+                    {
+                        for(int location=0; location<boolList.size(); )
+                        {
+                            if(boolList.get(location))
+                            {
+                                boolList.remove(location);
+                                strList.remove(location);
+                                continue;
+                            }
+                            location++;
+                        }
+                    }
+                }
+                this.ladapter.notifyDataSetChanged();
+                break;
+                 return true;*/
+            default:
             return super.onOptionsItemSelected(item);
         }
     }
@@ -391,6 +466,8 @@ public class NotesList extends ListActivity {
         /*
          * Gets the menu item's ID and compares it to known actions.
          */
+        TextView tv2=(TextView)findViewById(android.R.id.text1);
+        TextView tv1=(TextView)findViewById(R.id.text1_time);
         switch (item.getItemId()) {
         case R.id.context_open:
             // Launch activity to view/edit the currently selected item
@@ -426,6 +503,23 @@ public class NotesList extends ListActivity {
   
             // Returns to the caller and skips further processing.
             return true;
+            case R.id.back_color:
+                case R.id.yellow:
+                    tv1.setBackgroundColor(getResources().getColor(R.color.yellow));
+                    tv2.setBackgroundColor(getResources().getColor(R.color.yellow));
+                    return true;
+                case R.id.blue:
+                    tv1.setBackgroundColor(getResources().getColor(R.color.blue));
+                    tv2.setBackgroundColor(getResources().getColor(R.color.blue));
+                    return true;
+                case R.id.red:
+                    tv1.setBackgroundColor(getResources().getColor(R.color.red));
+                    tv2.setBackgroundColor(getResources().getColor(R.color.red));
+                    return true;
+                case R.id.black:
+                    tv1.setBackgroundColor(getResources().getColor(R.color.black));
+                    tv2.setBackgroundColor(getResources().getColor(R.color.black));
+                    return true;
         default:
             return super.onContextItemSelected(item);
         }
