@@ -513,7 +513,7 @@ int color = mCursor.getInt(mCursor.getColumnIndex(NotePad.Notes.COLUMN_NAME_BACK
                         backcolor=NotePad.Notes.DEFAULT_COLOR;
                         break;
                 }
-                ```
+```
 9、在NotePadProvider中的sql表格添加一行+ NotePad.Notes.COLUMN_NAME_BACK_IMAGE + " TEXT"   
 ```
 @Override
