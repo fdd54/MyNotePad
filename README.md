@@ -213,5 +213,23 @@ public class NoteSearch extends ListActivity implements SearchView.OnQueryTextLi
 }
 
 ```
+4、修改NotesList.java的onOptionsItemSelected()方法，在switch中插入关于搜索的case语句  
 ```
+      case R.id.menu_search:
+          Intent intent = new Intent();
+          intent.setClass(NotesList.this,NoteSearch.class);
+          NotesList.this.startActivity(intent);
+          return true;
 ```
+5、在AndroidManifest.xml注册NoteSearch  
+```
+<!--添加搜索activity-->
+    <activity
+        android:name="NoteSearch"
+        android:label="@string/title_notes_search">
+    </activity>
+```
+设置完毕，搜索功能完成  
+搜索显示截图：  
+
+
