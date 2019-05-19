@@ -44,3 +44,33 @@ A simple Notepad provides basic functionality
         android:textColor="@color/black"/>
 </LinearLayout>
 ```
+2、在NoteList.java的PROJECTION中添加一行记录修改时间的数据代码NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE  
+```
+private static final String[] PROJECTION = new String[] {
+           NotePad.Notes._ID, // 0
+           NotePad.Notes.COLUMN_NAME_TITLE, // 
+           NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, // 2
+   };
+```
+3、在NoteList.java修改dataColumns和viewIDs用以获得显示修改时间
+```
+String[] dataColumns = { NotePad.Notes.COLUMN_NAME_TITLE,NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE } ;
+
+    // The view IDs that will display the cursor columns, initialized to the TextView in
+    // noteslist_item.xml
+    int[] viewIDs = { android.R.id.text1 ,R.id.text1_time};
+```
+```
+Long now = Long.valueOf(System.currentTimeMillis());
+        Date date = new Date(now);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+        String dateTime = format.format(date);
+```
+```
+//修改时间
+        Long now = Long.valueOf(System.currentTimeMillis());
+        Date date = new Date(now);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+        String dateTime = format.format(date);
+        values.put(NotePad.Notes.COLUMN_NAME_MODIFICATION_DATE, dateTime);
+```
